@@ -37,7 +37,7 @@ public class Validation {
         }while(true);
     }    
 
-    public static int getCampus(String message) {
+    public static int getCampus() {
         Scanner sc = new Scanner(System.in);
         int inputCampusCode;
         do {

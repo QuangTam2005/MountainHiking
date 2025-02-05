@@ -3,11 +3,14 @@ package Collections;
 import Model.Mountain;
 import Model.Student;
 import Utils.Validation;
+import View.View;
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -24,32 +27,65 @@ public class StudentList extends ArrayList<Student> {
     private int countStep = 0;
 
     public void addStudent(Student student, String fileName) {
-        if (countStep == 0) {
-            loadFromFile(fileName);
+        if (isExist(student.getId(), "ID already exists")) {
+            return;
         }
-        countStep++;
-        for (Student stuInList : this) {
-            if (stuInList.getId().equals(student.getId())) {
-                System.out.println("ID already exists");
-                return;
-            }
+
+        if (isExist(student.getEmail(), "Email already exists")) {
+            return;
         }
+
+        if (isExist(student.getPhone(), "Phone number already exists")) {
+            return;
+        }
+
         this.add(student);
+
+        saveToFile("Student.dat");
+
+        loadFromFile("Student.dat");
+
+        countStep++;
     }
 
-    public void updateStudent(Student student, String fileName) {
+    public void updateStudent(String id, String fileName) {
         if (countStep == 0) {
             loadFromFile(fileName);
         }
         countStep++;
         for (int i = 0; i < this.size(); i++) {
-            if (this.get(i).getId().equals(student.getId())) {
-                this.set(i, student);
-                saveToFile(fileName);
+            if (this.get(i).getId().equals(id)) {
+                Student student = View.inputStudent();
+                Student tmp = searchByID(id);
+                int size = this.size();
+                deleteStudent(id, "Student.dat");
+                addStudent(student, "Student.dat");
+                if (this.size() != size) {
+                    addStudent(tmp, "Student.dat");
+                }
                 return;
             }
         }
         System.err.println("Your ID is not found");
+    }
+
+    public Student searchByID(String id) {
+        for (Student student : this) {
+            if (student.getId().equals(id)) {
+                return student;
+            }
+        }
+        return null;
+    }
+
+    public boolean isExist(String itemChecking, String mess) {
+        for (Student stuInList : this) {
+            if (stuInList.getId().equals(itemChecking)) {
+                System.out.println(mess);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void deleteStudent(String id, String fileName) {
@@ -127,10 +163,7 @@ public class StudentList extends ArrayList<Student> {
         }
         countStep++;
         Scanner sc = new Scanner(System.in);
-        System.out.println(". Ha Noi | 2. Ho Chi Minh | 3. Da Nang: | 4. Quy Nhon:"
-                + " | 5. Can Tho\nEnter the campus code to filter: ");
-        int campCode = Integer.parseInt(sc.nextLine());
-
+        int campCode = Validation.getCampus();
         for (Student student : this) {
             if (campCode == student.getCampusCode()) {
                 System.out.println(student.toString());
@@ -139,24 +172,27 @@ public class StudentList extends ArrayList<Student> {
     }
 
     public void countByLocation(String fileName) {
-        List<Object> objList = readFromFile(fileName);
-        List<Mountain> mountList = new ArrayList<>();
+        if (countStep == 0) {
+            loadFromFile(fileName);
+        }
+        countStep++;
+
+        List<Mountain> mountList = readFromFile("MountainList.txt", true);
+
         Map<String, Integer> counting = new HashMap<>();
 
-        for (Object obj : objList) {
-            mountList.add((Mountain) obj);
-        }
-
-        for (Mountain mountain : mountList) {
-            if (counting.containsKey(mountain.getMountain())) {
-                counting.put(mountain.getMountain(), counting.get(mountain.getMountain()) + 1);
+        for (Student student : this) {
+            if (counting.containsValue(student.getCampusCode())) {
+                counting.put(student.getMountainCode(), counting.get(student.getMountainCode()) + 1);
             } else {
-                counting.put(mountain.getMountain(), 1);
+                counting.put(student.getMountainCode(), 1);
             }
         }
 
-        for (Map.Entry<String, Integer> entry : counting.entrySet()) {
-            System.out.println(entry.getKey() + "has: " + entry.getValue() + " registrations.");
+        for (Mountain mountain : mountList) {
+            if (counting.containsKey(mountain.getMountainCode())) {
+                System.out.println(mountain.getMountain() + " has: " + counting.get(mountain.getMountainCode()));
+            }
         }
     }
 
@@ -218,27 +254,42 @@ public class StudentList extends ArrayList<Student> {
         }
     }
 
-    public List<Object> readFromFile(String fileName) {
-        List<Object> objectList = new ArrayList<>();
+    public List<Mountain> readFromFile(String fileName, boolean skipFirst) {
+        List<Mountain> mountainList = new ArrayList<>();
 
-        try (FileInputStream fileIS = new FileInputStream(fileName);
-                ObjectInputStream objectIS = new ObjectInputStream(fileIS)) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            boolean firstSkipped = false;
 
-            while (true) {
-                try {
-                    Object obj = objectIS.readObject();
-                    objectList.add(obj);
-                } catch (EOFException e) {
-                    break; // Đọc hết file, thoát vòng lặp
+            while ((line = br.readLine()) != null) {
+                // Nếu skipFirst = true, bỏ qua dòng đầu tiên
+                if (skipFirst && !firstSkipped) {
+                    firstSkipped = true;
+                    continue;
                 }
+
+                String[] values = line.split(","); // Tách dữ liệu theo dấu phẩy
+                if (values.length < 3) {
+                    continue;  // Kiểm tra số lượng cột trong mỗi dòng
+                }
+                // Giả sử file có định dạng: Name, Location, Height
+                String code = values[0].trim();
+                String name = values[1].trim();
+                String province = values[2].trim();
+                String desc = values[3].trim();
+
+                // Tạo đối tượng Mountain và thêm vào danh sách
+                Mountain mountain = new Mountain(code, name, province, desc);
+                mountainList.add(mountain);
             }
 
         } catch (FileNotFoundException e) {
             System.err.println("File not found: " + fileName);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             System.err.println("Error reading file: " + e.getMessage());
         }
 
-        return objectList;
+        return mountainList;
     }
+
 }

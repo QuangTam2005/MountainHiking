@@ -21,7 +21,7 @@ public class MenuController {
                     students.addStudent(View.inputStudent(), filePath);
                     break;
                 case 2:
-                    students.updateStudent(View.inputStudent(), filePath);
+                    students.updateStudent(Validation.getValid("Enter ID wanting to delete: ", "ID is not found", "^(HE|SE|QE|DE|CE)\\d{6}$"), filePath);
                     break;
                 case 3:
                     students.showStudentList(filePath);
@@ -36,7 +36,7 @@ public class MenuController {
                     students.filterByCampus(filePath);
                     break;
                 case 7:
-                    
+                    students.countByLocation(filePath);
                     break;
                 case 8:
                     students.saveToFile(filePath);
