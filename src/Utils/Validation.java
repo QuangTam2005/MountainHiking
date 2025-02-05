@@ -12,7 +12,7 @@ public class Validation {
                 System.out.print(message);
                 intInput = Integer.parseInt(sc.nextLine());
                 if (intInput < min || intInput > max) {
-                    System.err.println("Input is invalid. It must be between " + min + " VNĐ and " + max + " VNĐ!");
+                    System.err.println("Input is invalid. It must be between " + min + " and " + max + "!");
                     continue;
                 }
                 return intInput;

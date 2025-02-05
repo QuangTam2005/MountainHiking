@@ -15,7 +15,7 @@ public class Student implements Serializable{
     }
 
     
-    public Student(String id, int campusCode, String name, String phone, String email, String mountainCode, double tuitionFee) {
+    public Student(String id, int campusCode, String name, String phone, String email, String mountainCode) {
         this.id = id;
         this.campusCode = campusCode;
         this.name = name;
@@ -89,7 +89,7 @@ public class Student implements Serializable{
 
     @Override
     public String toString() {
-        return String.format("%s | %s | %s | %s | %.0f", id, name, phone, mountainCode, tuitionFee);
+        return String.format("%-11s | %-15s | %-10s | MT0%-6s | %.0f", id, name, phone, mountainCode, tuitionFee);
     }
     
     

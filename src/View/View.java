@@ -39,9 +39,7 @@ public class View {
                 + "10. Cam Mountain\n11. Thi Vai Mountain\n"
                 + "12. Dinh Mountain\n13. Co Tien Mountain\nEnter campus code: ");
 
-        int tuitionFee = Validation.getIntInRange("Enter tuition fee: ", 1, Integer.MAX_VALUE);
-
-        return new Student(id, campus, name, phoneNum, email, mountCode, tuitionFee);
+        return new Student(id, campus, name, phoneNum, email, mountCode);
     }
 
     public static void showMess(String mess) {

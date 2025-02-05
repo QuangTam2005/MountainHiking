@@ -5,8 +5,6 @@ import Model.Student;
 import Utils.Validation;
 import View.View;
 import java.io.BufferedReader;
-import java.io.EOFException;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -95,12 +93,20 @@ public class StudentList extends ArrayList<Student> {
         countStep++;
         for (int i = 0; i < this.size(); i++) {
             if (this.get(i).getId().equals(id)) {
-                this.remove(i);
-                saveToFile(fileName);
-                return;
+                System.out.println(this.get(i).toString());
+                int ans = Validation.getIntInRange("Are you sure you want to delete this registration?"
+                        + " (1/0): ", 0, 1);
+                if (ans == 1) {
+                    this.remove(i);
+                    System.out.println("The registration has been successfully deleted.");
+                    return;
+                } else {
+                    System.out.println("Process is cancelled.");
+                    return;
+                }
             }
         }
-        System.err.println("Your ID is not found");
+        System.err.println("This student has not registered yet.");
     }
 
     public void showStudentList(String fileName) {
@@ -109,11 +115,15 @@ public class StudentList extends ArrayList<Student> {
         }
         countStep++;
         if (this.isEmpty()) {
-            System.out.println("Registration is not found");
+            System.out.println("No students have registered yet.");
         } else {
+            System.out.println("----------------------------------------------------------------------");
+            System.out.println("Student ID  | Name            | Phone      | Peak Code | Fee");
+            System.out.println("----------------------------------------------------------------------");
             for (Student student : this) {
                 System.out.println(student.toString());
             }
+            System.out.println("----------------------------------------------------------------------");
         }
     }
 
@@ -150,11 +160,18 @@ public class StudentList extends ArrayList<Student> {
         Scanner sc = new Scanner(System.in);
         System.out.print("Enter the name wanting to search: ");
         String nameSearch = sc.nextLine();
+        boolean found = false;
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Student ID  | Name            | Phone      | Peak Code | Fee");
+        System.out.println("----------------------------------------------------------------------");
         for (Student student : this) {
             if (student.getName().toLowerCase().contains(nameSearch.toLowerCase())) {
                 System.out.println(student.toString());
+                found = true;
             }
         }
+        if (!found) System.out.println("No one matches the search criteria!");
+        System.out.println("----------------------------------------------------------------------");        
     }
 
     public void filterByCampus(String fileName) {
@@ -164,11 +181,18 @@ public class StudentList extends ArrayList<Student> {
         countStep++;
         Scanner sc = new Scanner(System.in);
         int campCode = Validation.getCampus();
+        boolean found = false;
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Student ID  | Name            | Phone      | Peak Code | Fee");
+        System.out.println("----------------------------------------------------------------------");
         for (Student student : this) {
             if (campCode == student.getCampusCode()) {
+                found = true;
                 System.out.println(student.toString());
             }
         }
+        if(!found) System.out.println("No students have registered under this campus.");
+        System.out.println("----------------------------------------------------------------------");
     }
 
     public void countByLocation(String fileName) {
@@ -188,12 +212,23 @@ public class StudentList extends ArrayList<Student> {
                 counting.put(student.getMountainCode(), 1);
             }
         }
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("Peak Name          | Number of Participants | Total Cost");
+        System.out.println("----------------------------------------------------------------------");
 
         for (Mountain mountain : mountList) {
             if (counting.containsKey(mountain.getMountainCode())) {
-                System.out.println(mountain.getMountain() + " has: " + counting.get(mountain.getMountainCode()));
+                double totalTuition = 0;
+                for (Student student : this) {
+                    if (student.getMountainCode().equals(mountain.getMountainCode())) {
+                        totalTuition += student.getTuitionFee();
+                    }
+                }
+                System.out.printf("MT0%-16s|  %-22s| %-9.0f\n", mountain.getMountainCode(), counting.get(mountain.getMountainCode()), totalTuition);
             }
         }
+
+        System.out.println("----------------------------------------------------------------------");
     }
 
     public void saveToFile(String fileName) {
@@ -205,35 +240,9 @@ public class StudentList extends ArrayList<Student> {
                 objectOS.writeObject(this);
                 objectOS.close();
                 fileOS.close();
-                System.out.println("Process is successfull");
+                System.out.println("Registration data has been successfully saved to Student.dat.");
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-        } else {
-            System.out.println("Choose other option!");
-        }
-    }
-
-    public void appendToFile(String fileName) {
-        int ans = Validation.getIntInRange("Do you want to save it?(1/0): ", 0, 1);
-        if (ans == 1) {
-            try (FileOutputStream fileOS = new FileOutputStream(fileName, true);
-                    ObjectOutputStream objectOS = new ObjectOutputStream(fileOS) {
-                @Override
-                protected void writeStreamHeader() throws IOException {
-                    if (new File(fileName).length() == 0) {
-                        super.writeStreamHeader(); // Chỉ ghi header nếu file rỗng
-                    } else {
-                        reset(); // Nếu file đã có dữ liệu, reset để tránh lỗi
-                    }
-                }
-            }) {
-
-                objectOS.writeObject(this);
-                System.out.println("Process is successful");
-
-            } catch (IOException e) {
-                System.err.println("Process errors");
             }
         } else {
             System.out.println("Choose other option!");
